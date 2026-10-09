@@ -1,0 +1,4 @@
+node_modules/
+nihongohub.db
+.env
+.DS_Store
