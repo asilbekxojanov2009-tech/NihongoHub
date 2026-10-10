@@ -23,7 +23,7 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
-app.use(express.static("public"));
+app.use(express.static("."));
 
 function requireUser(req, res, next) {
   if (!req.session.user) return res.status(401).json({ message: "Avval akkauntingizga kiring." });
