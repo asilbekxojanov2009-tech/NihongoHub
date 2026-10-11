@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NihongoHub — Admin kirish</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f5fb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      width: min(360px, 85%);
+      box-shadow: 0 8px 30px #0001;
+    }
+    h1 { color: #ed3545; }
+    input, button {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border-radius: 8px;
+    }
+    input { border: 1px solid #ccc; }
+    button {
+      border: 0;
+      background: #ed3545;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #message { color: #c22; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Admin panel</h1>
+    <p>NihongoHub boshqaruviga kirish</p>
+    <form id="loginForm">
+      <input name="username" placeholder="Admin login" required>
+      <input name="password" type="password" placeholder="Parol" required>
+      <button type="submit">Kirish</button>
+    </form>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.get("username"),
+          password: form.get("password")
+        })
+      });
+      const result = await response.json();
+      if (response.ok) {
+        location.href = "/admin/dashboard.html";
+      } else {
+        document.getElementById("message").textContent =
+          result.message || "Kirish amalga oshmadi.";
+      }
+    });
+  </script>
+</body>
+</html>
