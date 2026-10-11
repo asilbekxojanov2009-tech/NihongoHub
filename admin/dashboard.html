@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NihongoHub — Admin panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f5fa;
+      color: #20243a;
+    }
+    header {
+      background: #20243a;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    main { max-width: 900px; margin: 30px auto; padding: 16px; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 15px #0000000d;
+    }
+    .number { font-size: 32px; font-weight: bold; margin-top: 12px; }
+    a, button {
+      display: inline-block;
+      padding: 11px 15px;
+      border: 0;
+      border-radius: 8px;
+      background: #ed3545;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    #message { color: #b42332; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>NihongoHub Admin</h2>
+    <button id="logout">Chiqish</button>
+  </header>
+
+  <main>
+    <h1>Boshqaruv paneli</h1>
+    <p>Saytingiz holati va statistikasi.</p>
+    <p id="message">Ma’lumotlar yuklanmoqda...</p>
+
+    <section class="cards">
+      <div class="card">
+        Foydalanuvchilar
+        <div class="number" id="users">—</div>
+      </div>
+      <div class="card">
+        Darslar
+        <div class="number" id="lessons">—</div>
+      </div>
+      <div class="card">
+        Testlar natijalari
+        <div class="number" id="quizzes">—</div>
+      </div>
+    </section>
+
+    <nav>
+      <a href="/admin/users.html">Foydalanuvchilar</a>
+      <a href="/admin/lessons.html">Darslarni boshqarish</a>
+      <a href="/">Sayt bosh sahifasi</a>
+    </nav>
+  </main>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        const response = await fetch("/api/admin/stats");
+        if (response.status === 401) {
+          location.href = "/admin/login.html";
+          return;
+        }
+        if (!response.ok) throw new Error("Statistikani yuklab bo‘lmadi.");
+        const data = await response.json();
+        document.getElementById("users").textContent = data.users;
+        document.getElementById("lessons").textContent = data.lessons;
+        document.getElementById("quizzes").textContent = data.quizzes;
+        document.getElementById("message").textContent = "";
+      } catch (error) {
+        document.getElementById("message").textContent = error.message;
+      }
+    }
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST" });
+      location.href = "/admin/login.html";
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>
