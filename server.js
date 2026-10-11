@@ -214,6 +214,7 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
     quizzes: db.prepare("SELECT COUNT(*) AS n FROM quiz_results").get().n
   });
 });
+module.exports = db;
 
 app.get("/api/health", (req, res) => res.json({ ok: true, app: "NihongoHub" }));
 
