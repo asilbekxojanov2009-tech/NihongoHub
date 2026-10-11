@@ -37,4 +37,4 @@ if (kanjiCount === 0) {
   tx();
 }
 console.log("Demo darslar va kanjilar tayyor.");
-db.close();
+
