@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NihongoHub — Darslarni boshqarish</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f5fa; color: #20243a; }
+    header { background: #20243a; color: white; padding: 20px; }
+    main { max-width: 900px; margin: 25px auto; padding: 16px; }
+    .panel { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    input, textarea, select, button {
+      width: 100%; padding: 12px; margin: 7px 0;
+      border: 1px solid #ddd; border-radius: 7px; font: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button, a {
+      display: inline-block; width: auto; padding: 10px 14px;
+      border: 0; border-radius: 7px; background: #ed3545;
+      color: white; cursor: pointer; text-decoration: none;
+    }
+    a { background: #20243a; }
+    .lesson { border-top: 1px solid #eee; padding: 14px 0; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    #message { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <header><h2>NihongoHub — Admin</h2></header>
+  <main>
+    <p><a href="/admin/dashboard.html">← Boshqaruv paneliga qaytish</a></p>
+    <h1>Darslarni boshqarish</h1>
+
+    <div class="panel">
+      <h2 id="formTitle">Yangi dars qo‘shish</h2>
+      <form id="lessonForm">
+        <input id="title" placeholder="Dars nomi" required>
+        <input id="description" placeholder="Dars haqida qisqacha" required>
+        <select id="level" required>
+          <option value="N5">N5 daraja</option>
+          <option value="N4">N4 daraja</option>
+        </select>
+        <textarea id="content" placeholder="Dars mazmuni" required></textarea>
+        <button type="submit" id="saveButton">Darsni saqlash</button>
+        <button type="button" id="cancelButton" hidden>Bekor qilish</button>
+      </form>
+      <p id="message"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Mavjud darslar</h2>
+      <div id="lessons">Yuklanmoqda...</div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById("lessonForm");
+    const message = document.getElementById("message");
+    let editingId = null;
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+      if (response.status === 401) {
+        location.href = "/admin/login.html";
+        throw new Error("Admin hisobiga qayta kiring.");
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Xatolik yuz berdi.");
+      return data;
+    }
+
+    function resetForm() {
+      editingId = null;
+      form.reset();
+      document.getElementById("formTitle").textContent = "Yangi dars qo‘shish";
+      document.getElementById("saveButton").textContent = "Darsni saqlash";
+      document.getElementById("cancelButton").hidden = true;
+    }
+
+    async function loadLessons() {
+      const container = document.getElementById("lessons");
+      try {
+        const lessons = await api("/api/admin/lessons");
+        container.replaceChildren();
+
+        if (!lessons.length) {
+          container.textContent = "Hozircha darslar yo‘q.";
+          return;
+        }
+
+        for (const lesson of lessons) {
+          const box = document.createElement("div");
+          box.className = "lesson";
+
+          const title = document.createElement("h3");
+          title.textContent = lesson.title + " (" + lesson.level + ")";
+
+          const description = document.createElement("p");
+          description.textContent = lesson.description;
+
+          const actions = document.createElement("div");
+          actions.className = "actions";
+
+          const edit = document.createElement("button");
+          edit.textContent = "Tahrirlash";
+          edit.addEventListener("click", () => {
+            editingId = lesson.id;
+            document.getElementById("title").value = lesson.title;
+            document.getElementById("description").value = lesson.description;
+            document.getElementById("level").value = lesson.level;
+            document.getElementById("content").value = lesson.content || "";
+            document.getElementById("formTitle").textContent = "Darsni tahrirlash";
+            document.getElementById("saveButton").textContent = "O‘zgarishni saqlash";
+            document.getElementById("cancelButton").hidden = false;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+
+          const remove = document.createElement("button");
+          remove.textContent = "O‘chirish";
+          remove.addEventListener("click", async () => {
+            if (!confirm("Ushbu darsni o‘chirmoqchimisiz?")) return;
+            try {
+              await api("/api/admin/lessons/" + lesson.id, { method: "DELETE" });
+              message.textContent = "Dars o‘chirildi.";
+              await loadLessons();
+            } catch (error) {
+              message.textContent = error.message;
+            }
+          });
+
+          actions.append(edit, remove);
+          box.append(title, description, actions);
+          container.appendChild(box);
+        }
+      } catch (error) {
+        container.textContent = error.message;
+      }
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = {
+        title: document.getElementById("title").value.trim(),
+        description: document.getElementById("description").value.trim(),
+        level: document.getElementById("level").value,
+        content: document.getElementById("content").value.trim()
+      };
+
+      try {
+        if (editingId !== null) {
+          await api("/api/admin/lessons/" + editingId, {
+            method: "PUT",
+            body: JSON.stringify(data)
+          });
+          message.textContent = "Dars yangilandi.";
+        } else {
+          await api("/api/admin/lessons", {
+            method: "POST",
+            body: JSON.stringify(data)
+          });
+          message.textContent = "Yangi dars qo‘shildi.";
+        }
+        resetForm();
+        await loadLessons();
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    });
+
+    document.getElementById("cancelButton").addEventListener("click", resetForm);
+    loadLessons();
+  </script>
+</body>
+</html>
