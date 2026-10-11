@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NihongoHub — Foydalanuvchilar</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f5fa; color: #20243a; }
+    header { background: #20243a; color: white; padding: 20px; }
+    main { max-width: 1000px; margin: 25px auto; padding: 16px; }
+    .panel { background: white; padding: 20px; border-radius: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+    button, a { display: inline-block; border: 0; border-radius: 7px; padding: 9px 12px; cursor: pointer; text-decoration: none; }
+    button { background: #ed3545; color: white; }
+    a { background: #20243a; color: white; }
+    #message { margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <header><h2>NihongoHub — Admin</h2></header>
+  <main>
+    <p><a href="/admin/dashboard.html">← Boshqaruv paneliga qaytish</a></p>
+    <h1>Foydalanuvchilar</h1>
+    <p id="message">Yuklanmoqda...</p>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Ism</th><th>Email</th><th>Ro‘yxatdan o‘tgan</th><th>Amal</th></tr>
+        </thead>
+        <tbody id="users"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    async function loadUsers() {
+      const message = document.getElementById("message");
+      try {
+        const response = await fetch("/api/admin/users");
+        if (response.status === 401) {
+          location.href = "/admin/login.html";
+          return;
+        }
+        if (!response.ok) throw new Error("Foydalanuvchilarni yuklab bo‘lmadi.");
+        const users = await response.json();
+        const tbody = document.getElementById("users");
+        tbody.replaceChildren();
+
+        if (users.length === 0) {
+          message.textContent = "Hozircha foydalanuvchilar yo‘q.";
+          return;
+        }
+
+        for (const user of users) {
+          const row = document.createElement("tr");
+          for (const value of [
+            user.id,
+            user.name,
+            user.email,
+            user.created_at || "—"
+          ]) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          }
+
+          const actionCell = document.createElement("td");
+          const button = document.createElement("button");
+          button.textContent = "O‘chirish";
+          button.addEventListener("click", async () => {
+            if (!confirm("Bu foydalanuvchini o‘chirmoqchimisiz?")) return;
+            const result = await fetch("/api/admin/users/" + user.id, { method: "DELETE" });
+            if (result.ok) {
+              message.textContent = "Foydalanuvchi o‘chirildi.";
+              loadUsers();
+            } else {
+              message.textContent = "O‘chirish amalga oshmadi.";
+            }
+          });
+          actionCell.appendChild(button);
+          row.appendChild(actionCell);
+          tbody.appendChild(row);
+        }
+        if (users.length) message.textContent = "Jami: " + users.length + " ta foydalanuvchi.";
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>
