@@ -1,3 +1,37 @@
-<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ro‘yxatdan o‘tish — NihongoHub</title><link rel="stylesheet" href="/style.css"></head><body><nav class="navbar"><a class="logo" href="/">🇯🇵 NihongoHub</a><a class="nav-link" href="/">← Bosh sahifa</a></nav><main class="auth-wrap"><section class="auth-card"><h1>Akkaunt yarating</h1><h2>Yapon tilini o‘rganishni boshlang</h2><form id="form" class="form"><label>Ismingiz<input id="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Ismingiz"></label><label>Email<input id="email" type="email" required autocomplete="email" placeholder="email@example.com"></label><label>Parol<input id="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Kamida 8 belgi"></label><button class="primary" type="submit">Ro‘yxatdan o‘tish</button></form><p class="message" id="message"></p><p class="muted">Akkauntingiz bormi? <a href="/login.html">Kirish</a></p></section></main><script>
-const form=document.getElementById('form'),msg=document.getElementById('message');form.addEventListener('submit',async e=>{e.preventDefault();msg.textContent='';try{const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.value,email:email.value,password:password.value})});const d=await r.json();if(!r.ok)throw Error(d.message);location.href='/dashboard.html'}catch(e){msg.textContent=e.message;msg.className='message error'}});
-</script></body></html>
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ro‘yxatdan o‘tish — NihongoHub</title><link rel="stylesheet" href="/style.css"></head><body><nav class="navbar"><a class="logo" href="/">🇯🇵 NihongoHub</a><a class="nav-link" href="/">← Bosh sahifa</a></nav><main class="auth-wrap"><section class="auth-card"><h1>Akkaunt yarating</h1><h2>Yapon tilini o‘rganishni boshlang</h2><form id="form" class="form"><label>Ismingiz<input id="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Ismingiz"></label><label>Email<input id="email" type="email" required autocomplete="email" placeholder="email@example.com"></label><label>Parol<input id="password" type="password" required minlength="8" autocomplete="new-password" placeholder="Kamida 8 belgi"></label><button class="primary" type="submit">Ro‘yxatdan o‘tish</button></form><p class="message" id="message"></p><p class="muted">Akkauntingiz bormi? <a href="/login.html">Kirish</a></p></section></main>
+<script>
+const form = document.getElementById('form');
+const msg = document.getElementById('message');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msg.textContent = '';
+
+  const nameValue = document.getElementById('name').value.trim();
+  const emailValue = document.getElementById('email').value.trim();
+  const passwordValue = document.getElementById('password').value;
+
+  try {
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: nameValue,
+        email: emailValue,
+        password: passwordValue
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Ro‘yxatdan o‘tishda xatolik.');
+    }
+
+    location.href = '/dashboard.html';
+  } catch (error) {
+    msg.textContent = error.message || 'Server bilan bog‘lanib bo‘lmadi.';
+    msg.className = 'message error';
+  }
+});
+</script>
