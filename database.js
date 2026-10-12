@@ -1,69 +1,10 @@
-const Database = require("better-sqlite3");
-const path = require("path");
-const fs = require("fs");
-
-const dbPath = process.env.DB_PATH || path.join(__dirname, "nihongohub.db");
-
-if (process.env.DB_PATH) {
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-}
-
-const db = new Database(dbPath);
-
-db.pragma("foreign_keys = ON");
-
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL COLLATE NOCASE,
-  password TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user',
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS admins (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE NOT NULL COLLATE NOCASE,
-  password TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS lessons (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  level TEXT NOT NULL CHECK(level IN ('N5','N4')),
-  content TEXT NOT NULL DEFAULT '',
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS lesson_progress (
-  user_id INTEGER NOT NULL,
-  lesson_id INTEGER NOT NULL,
-  completed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (user_id, lesson_id),
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY(lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS quiz_results (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  level TEXT NOT NULL CHECK(level IN ('N5','N4')),
-  score INTEGER NOT NULL,
-  total INTEGER NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS kanji (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  character TEXT NOT NULL UNIQUE,
-  reading TEXT NOT NULL,
-  meaning TEXT NOT NULL,
-  example TEXT NOT NULL DEFAULT ''
-);
-`);
-
-module.exports = db;
+const Database=require("better-sqlite3"),path=require("path"),fs=require("fs");
+const file=process.env.DB_PATH||path.join(__dirname,"nihongohub.db");fs.mkdirSync(path.dirname(file),{recursive:true});
+const db=new Database(file);db.pragma("foreign_keys=ON");db.pragma("journal_mode=WAL");
+db.exec(`CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT UNIQUE NOT NULL COLLATE NOCASE,password TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS admins(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT UNIQUE NOT NULL COLLATE NOCASE,password TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS lessons(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,description TEXT NOT NULL,level TEXT NOT NULL CHECK(level IN ('N5','N4')),content TEXT NOT NULL DEFAULT '',created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS lesson_progress(user_id INTEGER NOT NULL,lesson_id INTEGER NOT NULL,completed_at TEXT DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(user_id,lesson_id),FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,FOREIGN KEY(lesson_id) REFERENCES lessons(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS quiz_results(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER NOT NULL,level TEXT NOT NULL,score INTEGER NOT NULL,total INTEGER NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+CREATE TABLE IF NOT EXISTS kanji(id INTEGER PRIMARY KEY AUTOINCREMENT,character TEXT UNIQUE NOT NULL,reading TEXT NOT NULL,meaning TEXT NOT NULL,example TEXT DEFAULT '');`);
+module.exports=db;

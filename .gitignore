@@ -1,4 +1,1 @@
-node_modules/
-nihongohub.db
-.env
-.DS_Store
+node_modules/\nnihongohub.db*\n.env\n
